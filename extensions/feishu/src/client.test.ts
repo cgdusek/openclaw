@@ -84,10 +84,15 @@ describe("createFeishuWSClient proxy handling", () => {
 
     createFeishuWSClient(baseAccount);
 
+    // On Windows, process.env keys are case-insensitive, so assigning HTTPS_PROXY can
+    // overwrite https_proxy. Assert the effective HTTPS value used by the runtime.
+    const expectedHttpsProxy =
+      process.platform === "win32" ? "http://upper-https:8002" : "http://lower-https:8001";
+
     expect(httpsProxyAgentCtorMock).toHaveBeenCalledTimes(1);
-    expect(httpsProxyAgentCtorMock).toHaveBeenCalledWith("http://lower-https:8001");
+    expect(httpsProxyAgentCtorMock).toHaveBeenCalledWith(expectedHttpsProxy);
     const options = firstWsClientOptions();
-    expect(options.agent).toEqual({ proxyUrl: "http://lower-https:8001" });
+    expect(options.agent).toEqual({ proxyUrl: expectedHttpsProxy });
   });
 
   it("passes HTTP_PROXY to ws client when https vars are unset", () => {
